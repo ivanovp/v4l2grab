@@ -106,6 +106,7 @@ static unsigned char jpegQuality = 70;
 static char* jpegFilename = NULL;
 static char* jpegFilenamePart = NULL;
 static char* deviceName = "/dev/video0";
+static unsigned int sleep_ms = 200; /* delay after opening the device */
 
 static const char* const continuousFilenameFmt = "%s_%010"PRIu32"_%"PRId64".jpg";
 
@@ -840,13 +841,14 @@ static void usage(FILE* fp, int argc, char** argv)
 		"-W | --width         Set image width\n"
 		"-H | --height        Set image height\n"
 		"-I | --interval      Set frame interval (fps) (-1 to skip)\n"
+		"-s | --sleep         Set sleep in ms before first capture (default 200)\n"
 		"-c | --continuous    Do continous capture, stop with SIGINT.\n"
 		"-v | --version       Print version\n"
 		"",
 		argv[0]);
 	}
 
-static const char short_options [] = "d:ho:q:mruW:H:I:vc";
+static const char short_options [] = "d:ho:q:mruW:H:I:s:vc";
 
 static const struct option
 long_options [] = {
@@ -860,6 +862,7 @@ long_options [] = {
 	{ "width",      required_argument,      NULL,           'W' },
 	{ "height",     required_argument,      NULL,           'H' },
 	{ "interval",   required_argument,      NULL,           'I' },
+	{ "sleep",      required_argument,      NULL,           's' },
 	{ "version",	no_argument,		NULL,		'v' },
 	{ "continuous",	no_argument,		NULL,		'c' },
 	{ 0, 0, 0, 0 }
@@ -947,6 +950,10 @@ int main(int argc, char **argv)
 				InstallSIGINTHandler();
 				break;
 				
+			case 's':
+				// set sleep in ms
+				sleep_ms = atoi(optarg);
+				break;
 
 			case 'v':
 				printf("Version: %s\n", VERSION);
@@ -977,6 +984,7 @@ int main(int argc, char **argv)
 	// open and initialize device
 	deviceOpen();
 	deviceInit();
+	usleep(sleep_ms * 1e3);
 
 	// start capturing
 	captureStart();
